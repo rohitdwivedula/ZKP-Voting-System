@@ -10,16 +10,15 @@ class Blockchain:
         self.current_transactions = []
         self.chain = []
         self.nodes = set()
-
-        # Create the genesis block
-        self.new_block(previous_hash='1', proof=100)
+        if not self.resolve_conflicts():
+            # make genesis block if no other nodes already exist
+            self.new_block(previous_hash='1', proof=100)        
 
     def register_node(self, address):
         """
         Add a new node to the list of nodes
         :param address: Address of node. Eg. 'http://192.168.0.5:5000'
         """
-
         parsed_url = urlparse(address)
         if parsed_url.netloc:
             self.nodes.add(parsed_url.netloc)
@@ -68,7 +67,7 @@ class Blockchain:
         neighbours = self.nodes
         new_chain = None
 
-        # We're only looking for chains longer than ours
+        # only when a chain is longer than this chain, it will be replaced
         max_length = len(self.chain)
 
         # Grab and verify the chains from all the nodes in our network
@@ -88,7 +87,27 @@ class Blockchain:
         if new_chain:
             self.chain = new_chain
             return True
+        return False
 
+    def verify_transactions(self):
+        # check if all transactions pending are valid
+        for transaction in self.current_transactions:
+            if self.already_voted(transaction['voter']):
+                self.current_transactions.remove(transaction)
+                print("Removed transaction " + transaction  + " as it is invalid")
+        if len(self.current_transactions) == 0:
+            print("No transactions in queue")
+            return
+        
+
+    def already_voted(self, voter_id):
+        current_index = 0
+        while current_index < len(self.chain):
+            transactions_in_block = self.chain[current_index]['transactions']
+            for transaction in transactions_in_block:
+                if transaction['voter'] == voter_id:
+                    return True
+            current_index += 1
         return False
 
     def new_block(self, proof, previous_hash):
@@ -109,24 +128,22 @@ class Blockchain:
 
         # Reset the current list of transactions
         self.current_transactions = []
-
         self.chain.append(block)
         return block
 
-    def new_transaction(self, sender, recipient, amount):
+    def new_transaction(self, voter, voted_for):
         """
-        Creates a new transaction to go into the next mined Block
-        :param sender: Address of the Sender
-        :param recipient: Address of the Recipient
-        :param amount: Amount
+        Creates a new transaction to go into the next mined Block.
+        This will not be mined/verified unless we call the mine function.
+        It will just sit on the local disk
+        :param voter: public key of voter
+        :param voted_for: name of the candidate
         :return: The index of the Block that will hold this transaction
         """
         self.current_transactions.append({
-            'sender': sender,
-            'recipient': recipient,
-            'amount': amount,
+            'voter': voter,
+            'voted_for': voted_for
         })
-
         return self.last_block['index'] + 1
 
     @property
@@ -146,7 +163,7 @@ class Blockchain:
 
     def proof_of_work(self, last_block):
         """
-        Simple Proof of Work Algorithm:
+        Proof of Work:
          - Find a number p' such that hash(pp') contains leading 4 zeroes
          - Where p is the previous proof, and p' is the new proof
         :param last_block: <dict> last Block
@@ -159,7 +176,6 @@ class Blockchain:
         proof = 0
         while self.valid_proof(last_proof, proof, last_hash) is False:
             proof += 1
-
         return proof
 
     @staticmethod
@@ -172,6 +188,8 @@ class Blockchain:
         :return: <bool> True if correct, False if not.
         """
 
-        guess = f'{last_proof}{proof}{last_hash}'.encode()
-        guess_hash = hashlib.sha256(guess).hexdigest()
-        return guess_hash[:4] == "0000"
+        trial = f'{last_proof}{proof}{last_hash}'.encode()
+        trial_hash = hashlib.sha256(trial).hexdigest()
+        if trial_hash[:4] == "0000":
+            print("Hash found: " + trial_hash)
+        return trial_hash[:4] == "0000"

@@ -4,6 +4,7 @@ from flask_bower import Bower
 from argparse import ArgumentParser, ArgumentTypeError
 from classes.blockchain import Blockchain
 
+
 # Instantiate the Node
 app = Flask(__name__)
 
@@ -20,19 +21,19 @@ def main():
         return "Hello Boss!"
     
 
-@app.route('/api/mine', methods=['GET'])
-def mine():
+@app.route('/api/mine', methods=['POST'])
+def mine(): 
+    if not all(k in values for k in required):
+        return 'Missing values', 400
+
+    if not blockchain.verify_transactions():
+        # if there are no transactions in queue (or) if there are no non-invalid transactions
+        # return status code 406: Not Acceptable    
+        print("ERROR: Invalid transaction")
+        return jsonify("Transaction Error: Queue either empty or invalid trasnactions"), 406
     # We run the proof of work algorithm to get the next proof...
     last_block = blockchain.last_block
     proof = blockchain.proof_of_work(last_block)
-
-    # We must receive a reward for finding the proof.
-    # The sender is "0" to signify that this node has mined a new coin.
-    blockchain.new_transaction(
-        sender="0",
-        recipient=node_identifier,
-        amount=1,
-    )
 
     # Forge the new Block by adding it to the chain
     previous_hash = blockchain.hash(last_block)
@@ -53,12 +54,12 @@ def new_transaction():
     values = request.get_json()
 
     # Check that the required fields are in the POST'ed data
-    required = ['sender', 'recipient', 'amount']
+    required = ['voter', 'voted_for', 'private_key']
     if not all(k in values for k in required):
         return 'Missing values', 400
 
     # Create a new Transaction
-    index = blockchain.new_transaction(values['sender'], values['recipient'], values['amount'])
+    index = blockchain.new_transaction(values['voter'], values['vote_for'])
 
     response = {'message': f'Transaction will be added to Block {index}'}
     return jsonify(response), 201

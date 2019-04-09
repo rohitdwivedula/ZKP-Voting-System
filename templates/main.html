@@ -1,15 +1,16 @@
 <html>
     <head>
         <title>Voting System</title>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
         <style>
             .header {
-                background-color: F1F1FF;
+                background-color: #F1F1FF;
                 text-align: center;
                 padding: 20px;
                 color: 'black';
             } 
             .content {
-                background-color: F1F1F1;
+                background-color: #F1F1F1;
                 margin: 10px;
                 padding: 10px;
             }
@@ -30,9 +31,14 @@
                 padding: 8px;
             }
 
+            #vote_for .selected {
+                background-color: yellow;
+                color: black;
+            }
+
             #vote_for tr:nth-child(even){background-color: f2f2f2;}
 
-            #vote_for tr:hover {background-color: ddd;}
+            #vote_for tr:hover {background-color: ddd; cursor: move}
 
             #vote_for th {
                 padding-top: 12px;
@@ -42,11 +48,15 @@
                 color: 'white';
             }
         </style>
+        
         <script>
-            $("#vote_for tr").click(function(){
-                $(this).addClass('selected').siblings().removeClass('selected');    
-                var value=$(this).find('td:first').html();
-                alert(value);    
+            $("tbody tr").click(function () {
+                $('.selected').removeClass('selected');
+                $(this).addClass("selected");
+                var product = $('.p',this).html();
+                var infRate =$('.i',this).html();
+                var note =$('.n',this).html();
+                alert(product +','+ infRate+','+ note);
             });
         </script>
     </head>
@@ -59,8 +69,9 @@
             <form class = "UserForm">
                 Public Key: <input type="text" name="pub_key">
                 <br>
-                Private Key:<input type="text" name="pri_key">
+                Private Key:<input type="password" name="pri_key">
                 <br>
+                Voting for: <input type="text" id="votefor" name="candidate_name" readonly placeholder="-">
                 
             </form>
             <br>
