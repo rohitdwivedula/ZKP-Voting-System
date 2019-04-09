@@ -4,6 +4,7 @@ from urllib.parse import urlparse
 import mysql.connector 
 import requests
 import json
+import random 
 
 class Blockchain:
     def __init__(self):
@@ -89,16 +90,55 @@ class Blockchain:
             return True
         return False
 
-    def verify_transactions(self):
+    def verify_transactions(self, voter):
+        '''
+        Verify all transactions in current_transactions by:
+          - checking if the voter has voted before
+          -   
+        :return: True if our chain was replaced, False if not
+        '''
         # check if all transactions pending are valid
         for transaction in self.current_transactions:
             if self.already_voted(transaction['voter']):
                 self.current_transactions.remove(transaction)
                 print("Removed transaction " + transaction  + " as it is invalid")
+        
         if len(self.current_transactions) == 0:
             print("No transactions in queue")
-            return
+            return False
         
+        for transaction in self.current_transactions:
+            if transaction['voter'] == voter:
+                transaction_to_verify = transaction
+                break 
+
+        # use zero knowledge proof to verify what's the vote
+        # Interactive zero knowledge proof
+        g = 961, p = 997
+        # convert string to a number
+        x = sum(ord(c) << i*8 for i, c in enumerate(transaction_to_verify['voted_for']))
+        y = mod(g, x, p)
+        '''BOB (this function) possesses secret information x'''
+        for i in range(0,5):
+            r = random.randrage(20, 100, 1)
+            c = pow(g, r, p) # (g^r) mod p
+            cipher1 = pow(g, ((x+r)%(p-1)), p)
+            if not verifyChallenge(c, y, p, cipher1):
+                print("FATAL ERROR: ZERO KNOWLEDGE PROOF VERIFICATION FAILED")
+                return False
+        return True
+
+    @staticmethod
+    def get_challenge(c, y, p):
+        '''ALICE is trying to ascertain that bob has the info'''
+        # this is the function that is trying to determine if values are known 
+        cipher2 =  (c*y)%p
+        if cipher2 == cipher1:
+            # Alice is atleast partially convinced that Bob knows x 
+            return True
+        else:
+            return False
+
 
     def already_voted(self, voter_id):
         current_index = 0
@@ -140,6 +180,12 @@ class Blockchain:
         :param voted_for: name of the candidate
         :return: The index of the Block that will hold this transaction
         """
+
+        for transaction in self.current_transactions:
+            if transaction['voter'] == voter:
+                # this voter's vote is already waiting to be mined.
+                # therefore, rejected.
+                return False
         self.current_transactions.append({
             'voter': voter,
             'voted_for': voted_for

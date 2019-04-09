@@ -4,7 +4,6 @@ from flask_bower import Bower
 from argparse import ArgumentParser, ArgumentTypeError
 from classes.blockchain import Blockchain
 
-
 # Instantiate the Node
 app = Flask(__name__)
 
@@ -23,14 +22,6 @@ def main():
 
 @app.route('/api/mine', methods=['POST'])
 def mine(): 
-    if not all(k in values for k in required):
-        return 'Missing values', 400
-
-    if not blockchain.verify_transactions():
-        # if there are no transactions in queue (or) if there are no non-invalid transactions
-        # return status code 406: Not Acceptable    
-        print("ERROR: Invalid transaction")
-        return jsonify("Transaction Error: Queue either empty or invalid trasnactions"), 406
     # We run the proof of work algorithm to get the next proof...
     last_block = blockchain.last_block
     proof = blockchain.proof_of_work(last_block)
@@ -48,19 +39,36 @@ def mine():
     }
     return jsonify(response), 200
 
+def authenticate_user(public_key, private_key):
+    # authenticate against list of users in database
+    return True;
 
 @app.route('/api/transactions/new', methods=['POST'])
 def new_transaction():
     values = request.get_json()
-
     # Check that the required fields are in the POST'ed data
     required = ['voter', 'voted_for', 'private_key']
     if not all(k in values for k in required):
         return 'Missing values', 400
+    
+    # Check user credentials by matching private and public keys
+    if not authenticate_user(values['voter'], values['vote_for']):
+        # Status 401: Unauthorized
+        print("User does not exist in voter list/incorrect auth")
+        return jsonify("Authorization Error"), 401
 
-    # Create a new Transaction
+    # Create a new Transaction, ensure vote of same candidate not in queue
     index = blockchain.new_transaction(values['voter'], values['vote_for'])
+    if not index:
+        return jsonify("Error: Vote already in Queue"), 406
 
+    # Use zero knowledge proof to verify transaction
+    if not blockchain.verify_transactions(values['voter']):
+        # if there is a invalid transaction
+        # return status code 406: Not Acceptable    
+        print("ERROR: Invalid transaction")
+        return jsonify("Transaction Error: Invalid trasnaction"), 406
+    
     response = {'message': f'Transaction will be added to Block {index}'}
     return jsonify(response), 201
 

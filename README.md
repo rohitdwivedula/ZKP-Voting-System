@@ -10,4 +10,4 @@ Before the block is mined, we check if the person has voted before and use ZKP t
 
 1. Create web app. 
 2. Integrate web app with backend APIs.
-3. Implement Discrete Log
+3. Add database
