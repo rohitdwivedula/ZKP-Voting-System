@@ -90,6 +90,17 @@ class Blockchain:
             return True
         return False
 
+    @staticmethod
+    def verifyChallenge(c, y, p, cipher1):
+        '''ALICE is trying to ascertain that bob has the info'''
+        # this is the function that is trying to determine if values are known 
+        cipher2 =  (c*y)%p
+        if cipher2 == cipher1:
+            # Alice is atleast partially convinced that Bob knows x 
+            return True
+        else:
+            return False
+
     def verify_transactions(self, voter):
         '''
         Verify all transactions in current_transactions by:
@@ -97,7 +108,7 @@ class Blockchain:
           -   
         :return: True if our chain was replaced, False if not
         '''
-        # check if all transactions pending are valid
+        # check if all transactions pending are valid if all transactions pending are valid
         for transaction in self.current_transactions:
             if self.already_voted(transaction['voter']):
                 self.current_transactions.remove(transaction)
@@ -114,31 +125,20 @@ class Blockchain:
 
         # use zero knowledge proof to verify what's the vote
         # Interactive zero knowledge proof
-        g = 961, p = 997
+        g = 961
+        p = 997
         # convert string to a number
         x = sum(ord(c) << i*8 for i, c in enumerate(transaction_to_verify['voted_for']))
-        y = mod(g, x, p)
+        y = pow(g, x, p)
         '''BOB (this function) possesses secret information x'''
         for i in range(0,5):
-            r = random.randrage(20, 100, 1)
+            r = random.randrange(2, 100)
             c = pow(g, r, p) # (g^r) mod p
             cipher1 = pow(g, ((x+r)%(p-1)), p)
-            if not verifyChallenge(c, y, p, cipher1):
+            if not self.verifyChallenge(c, y, p, cipher1):
                 print("FATAL ERROR: ZERO KNOWLEDGE PROOF VERIFICATION FAILED")
                 return False
         return True
-
-    @staticmethod
-    def get_challenge(c, y, p):
-        '''ALICE is trying to ascertain that bob has the info'''
-        # this is the function that is trying to determine if values are known 
-        cipher2 =  (c*y)%p
-        if cipher2 == cipher1:
-            # Alice is atleast partially convinced that Bob knows x 
-            return True
-        else:
-            return False
-
 
     def already_voted(self, voter_id):
         current_index = 0

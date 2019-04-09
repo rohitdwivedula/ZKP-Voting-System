@@ -8,6 +8,7 @@ Before the block is mined, we check if the person has voted before and use ZKP t
 
 # To Do
 
-1. Create web app. 
-2. Integrate web app with backend APIs.
-3. Add database
+0. Database and generation of RSA Public and Private Keys
+1. User Authentication (RSA)
+2. Create web app
+3. Integrate web app with backend APIs

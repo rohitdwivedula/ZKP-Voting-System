@@ -20,7 +20,7 @@ def main():
         return "Hello Boss!"
     
 
-@app.route('/api/mine', methods=['POST'])
+@app.route('/api/mine', methods=['GET'])
 def mine(): 
     # We run the proof of work algorithm to get the next proof...
     last_block = blockchain.last_block
@@ -41,24 +41,25 @@ def mine():
 
 def authenticate_user(public_key, private_key):
     # authenticate against list of users in database
-    return True;
+    return True
 
 @app.route('/api/transactions/new', methods=['POST'])
 def new_transaction():
     values = request.get_json()
     # Check that the required fields are in the POST'ed data
     required = ['voter', 'voted_for', 'private_key']
+    
     if not all(k in values for k in required):
         return 'Missing values', 400
     
     # Check user credentials by matching private and public keys
-    if not authenticate_user(values['voter'], values['vote_for']):
+    if not authenticate_user(values['voter'], values['voted_for']):
         # Status 401: Unauthorized
         print("User does not exist in voter list/incorrect auth")
         return jsonify("Authorization Error"), 401
 
     # Create a new Transaction, ensure vote of same candidate not in queue
-    index = blockchain.new_transaction(values['voter'], values['vote_for'])
+    index = blockchain.new_transaction(values['voter'], values['voted_for'])
     if not index:
         return jsonify("Error: Vote already in Queue"), 406
 
