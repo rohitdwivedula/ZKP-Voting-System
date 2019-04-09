@@ -1,0 +1,92 @@
+<html>
+    <head>
+        <title>Voting System</title>
+        <style>
+            .header {
+                background-color: F1F1FF;
+                text-align: center;
+                padding: 20px;
+                color: 'black';
+            } 
+            .content {
+                background-color: F1F1F1;
+                margin: 10px;
+                padding: 10px;
+            }
+
+            .UserForm {
+                text-align: center;
+            }
+
+            #vote_for {
+                font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
+                border-collapse: collapse;
+                width: 100%;
+                margin: 10px;
+            }
+
+            #vote_for td, #vote_for th {
+                border: 1px solid ddd;
+                padding: 8px;
+            }
+
+            #vote_for tr:nth-child(even){background-color: f2f2f2;}
+
+            #vote_for tr:hover {background-color: ddd;}
+
+            #vote_for th {
+                padding-top: 12px;
+                padding-bottom: 12px;
+                text-align: left;
+                background-color: 4CAF50;
+                color: 'white';
+            }
+        </style>
+        <script>
+            $("#vote_for tr").click(function(){
+                $(this).addClass('selected').siblings().removeClass('selected');    
+                var value=$(this).find('td:first').html();
+                alert(value);    
+            });
+        </script>
+    </head>
+    <body>
+        <div class="header">
+            Election Commission of India
+        </div>
+        <div class="content">
+            <h1>Blockchain Voting System</h1>
+            <form class = "UserForm">
+                Public Key: <input type="text" name="pub_key">
+                <br>
+                Private Key:<input type="text" name="pri_key">
+                <br>
+                
+            </form>
+            <br>
+            Select the candidate you wish to vote for:
+            <table id="vote_for">
+                    <tr>
+                        <th> Candidate Name </th>
+                        <th> Political Party </th>
+                    </tr>
+                    <tr>
+                        <td> Narendra Modi </td>
+                        <td> BJP </td>
+                    </tr>
+                    <tr>
+                        <td> Rahul Gandhi </td>
+                        <td> INC </td>
+                    </tr>
+                    <tr>
+                        <td> Chandrababu Naidu </td>
+                        <td> TDP </td>
+                    </tr>
+                    <tr>
+                        <td> NOTA </td>
+                        <td> No affiliation </td>
+                    </tr>
+                </table>
+        </div>
+    </body>    
+</html>
