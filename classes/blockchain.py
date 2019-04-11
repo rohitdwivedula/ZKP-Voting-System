@@ -1,13 +1,14 @@
 from time import time
 import hashlib
 from urllib.parse import urlparse
-import mysql.connector 
 import requests
 import json
-import random 
+import random
+from database import load_port, all_ports
 
 class Blockchain:
-    def __init__(self):
+    def __init__(self, port):
+        self.port = port
         self.current_transactions = []
         self.chain = []
         self.nodes = set()
@@ -112,7 +113,8 @@ class Blockchain:
         for transaction in self.current_transactions:
             if self.already_voted(transaction['voter']):
                 self.current_transactions.remove(transaction)
-                print("Removed transaction " + transaction  + " as it is invalid")
+                print("Removed below transaction as it is invalid:")
+                print(json.dumps(transaction))
         
         if len(self.current_transactions) == 0:
             print("No transactions in queue")
@@ -123,8 +125,12 @@ class Blockchain:
                 transaction_to_verify = transaction
                 break 
 
-        # use zero knowledge proof to verify what's the vote
-        # Interactive zero knowledge proof
+        '''   
+            Interactive zero knowledge proof: ZKP proof to verify candidate's vote
+            Changing p to a non-prime will cause the verification to fail (as it should)              
+            ref: https://asecuritysite.com/encryption/z
+        '''
+
         g = 961
         p = 997
         # convert string to a number

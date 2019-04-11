@@ -3,19 +3,25 @@ from flask import Flask, jsonify, request, render_template, session
 from flask_bower import Bower
 from argparse import ArgumentParser, ArgumentTypeError
 from classes.blockchain import Blockchain
+import random, string
+from database import insert_user, authenticate_user
+
+# Setup Argument Parser
+parser = ArgumentParser()
+parser.add_argument('-p', '--port', default=5000, type= int, help='port to listen on')
+args = parser.parse_args()
+port = args.port    
 
 # Instantiate the Node
 app = Flask(__name__)
 
-# Generate a globally unique address for this node
-node_identifier = str(uuid4()).replace('-', '')
 # Instantiate the Blockchain
-blockchain = Blockchain()
+blockchain = Blockchain(port)
 
 @app.route("/")
 def main():
     if not session.get('logged_in'):
-        return render_template('views/login.html')
+        return render_template('main.html')
     else:
         return "Hello Boss!"
     
@@ -39,13 +45,25 @@ def mine():
     }
     return jsonify(response), 200
 
-def authenticate_user(public_key, private_key):
-    # authenticate against list of users in database
-    return True
+@app.route('/api/generate/user', methods=["GET"])
+def create_voter():
+    username = ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(10))
+    password = ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(12))
+    print(username)
+    print(password)
+    if insert_user(username, password):
+        user = {
+            'username': username,
+            'password': password 
+        }
+        return jsonify(user), 201
+    else:
+        return jsonify({'Error': 'Unexpected Database Error'}), 400
 
 @app.route('/api/transactions/new', methods=['POST'])
 def new_transaction():
     values = request.get_json()
+    print(values)
     # Check that the required fields are in the POST'ed data
     required = ['voter', 'voted_for', 'private_key']
     
@@ -53,7 +71,7 @@ def new_transaction():
         return 'Missing values', 400
     
     # Check user credentials by matching private and public keys
-    if not authenticate_user(values['voter'], values['voted_for']):
+    if not authenticate_user(values['voter'], values['private_key']):
         # Status 401: Unauthorized
         print("User does not exist in voter list/incorrect auth")
         return jsonify("Authorization Error"), 401
@@ -118,8 +136,4 @@ def consensus():
 
     return jsonify(response), 200
 
-parser = ArgumentParser()
-parser.add_argument('-p', '--port', default=5000, type= int, help='port to listen on')
-args = parser.parse_args()
-port = args.port    
 app.run(host='0.0.0.0', port=port)

@@ -1,7 +1,6 @@
 <html>
     <head>
-        <title>Voting System</title>
-        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+        <title>Blockchain Voting System</title>
         <style>
             .header {
                 background-color: #F1F1FF;
@@ -48,54 +47,48 @@
                 color: 'white';
             }
         </style>
-        
-        <script>
-            $("tbody tr").click(function () {
-                $('.selected').removeClass('selected');
-                $(this).addClass("selected");
-                var product = $('.p',this).html();
-                var infRate =$('.i',this).html();
-                var note =$('.n',this).html();
-                alert(product +','+ infRate+','+ note);
-            });
-        </script>
     </head>
     <body>
         <div class="header">
-            Election Commission of India
+            Election Commission of India. <a href="/api/generate/user">Create User</a>
         </div>
         <div class="content">
             <h1>Blockchain Voting System</h1>
-            <form class = "UserForm">
-                Public Key: <input type="text" name="pub_key">
+            <form action = "/api/transactions/new" class = "UserForm" id="votingform" method="post">
+                Public Key: <input type="text" name="voter" required>
                 <br>
-                Private Key:<input type="password" name="pri_key">
+                Private Key:<input type="password" name="private_key" required>
                 <br>
-                Voting for: <input type="text" id="votefor" name="candidate_name" readonly placeholder="-">
-                
+                Voting for: <input type="text" id="voted_for" name="candidate_name" readonly required placeholder="-">
             </form>
+            <button type="submit" form="votingform">Vote</button>
             <br>
-            Select the candidate you wish to vote for:
+            Candidate information you wish to vote for. (Be an informed voter!)
             <table id="vote_for">
                     <tr>
                         <th> Candidate Name </th>
                         <th> Political Party </th>
+                        <th> Manifesto </th>
                     </tr>
                     <tr>
                         <td> Narendra Modi </td>
                         <td> BJP </td>
+                        <td> <a href="https://bit.ly/2Gctuah">Manifesto Summary: NDA</a></td>
                     </tr>
                     <tr>
                         <td> Rahul Gandhi </td>
                         <td> INC </td>
+                        <td> <a href="https://bit.ly/2VzNo47">The Team Manifesto</a> </td>
                     </tr>
                     <tr>
                         <td> Chandrababu Naidu </td>
                         <td> TDP </td>
+                        <td> <a href="https://bit.ly/2KgDaVa">TDP Talking Points</a></td>
                     </tr>
                     <tr>
                         <td> NOTA </td>
                         <td> No affiliation </td>
+                        <td> Is all hope really lost? </td>
                     </tr>
                 </table>
         </div>
