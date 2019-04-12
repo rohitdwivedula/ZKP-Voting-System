@@ -4,7 +4,7 @@ from urllib.parse import urlparse
 import requests
 import json
 import random
-from database import load_port, all_ports
+from database import load_port, all_ports, update_block, insert_node
 
 class Blockchain:
     def __init__(self, port):
@@ -12,9 +12,18 @@ class Blockchain:
         self.current_transactions = []
         self.chain = []
         self.nodes = set()
-        if not self.resolve_conflicts():
-            # make genesis block if no other nodes already exist
-            self.new_block(previous_hash='1', proof=100)        
+        for node in all_ports():
+            # add all nodes to set - for communication
+            if node != port:
+                self.nodes.add("localhost:" + str(node))
+            
+        self.chain = load_port(self.port)
+        if not self.chain:
+            self.chain = []
+            self.new_block(previous_hash='1', proof=100)
+            self.resolve_conflicts()
+            if not insert_node(self.port, self.chain):
+                print("Database entry failed.")
 
     def register_node(self, address):
         """
@@ -74,17 +83,21 @@ class Blockchain:
 
         # Grab and verify the chains from all the nodes in our network
         for node in neighbours:
-            response = requests.get(f'http://{node}/chain')
+            try:
+                response = requests.get(f'http://{node}/api/chain')
+                print(node)
+                print(response)
+                if response.status_code == 200:
+                    print(response)
+                    length = response.json()['length']
+                    chain = response.json()['chain']
 
-            if response.status_code == 200:
-                length = response.json()['length']
-                chain = response.json()['chain']
-
-                # Check if the length is longer and the chain is valid
-                if length > max_length and self.valid_chain(chain):
-                    max_length = length
-                    new_chain = chain
-
+                    # Check if the length is longer and the chain is valid
+                    if length > max_length and self.valid_chain(chain):
+                        max_length = length
+                        new_chain = chain
+            except:
+                continue
         # Replace our chain if we discovered a new, valid chain longer than ours
         if new_chain:
             self.chain = new_chain
@@ -175,6 +188,7 @@ class Blockchain:
         # Reset the current list of transactions
         self.current_transactions = []
         self.chain.append(block)
+        update_block(self.chain, self.port)
         return block
 
     def new_transaction(self, voter, voted_for):

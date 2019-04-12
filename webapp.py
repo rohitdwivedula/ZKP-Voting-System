@@ -25,7 +25,6 @@ def main():
     else:
         return "Hello Boss!"
     
-
 @app.route('/api/mine', methods=['GET'])
 def mine(): 
     # We run the proof of work algorithm to get the next proof...
@@ -91,6 +90,12 @@ def new_transaction():
     response = {'message': f'Transaction will be added to Block {index}'}
     return jsonify(response), 201
 
+@app.route('/api/transactions/all')
+def all_pending_transctions():
+    '''
+    API Route to display the list of pending transactions. 
+    '''
+    return jsonify(blockchain.current_transactions), 200
 
 @app.route('/api/chain', methods=['GET'])
 def full_chain():
@@ -136,4 +141,7 @@ def consensus():
 
     return jsonify(response), 200
 
+@app.route('/api/nodes/all', methods=["GET"])
+def all_nodes():
+    return jsonify(list(blockchain.nodes)), 200
 app.run(host='0.0.0.0', port=port)
